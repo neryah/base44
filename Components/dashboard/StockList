@@ -1,0 +1,71 @@
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingUp, TrendingDown } from "lucide-react";
+
+export default function StockList({ portfolio, loading }) {
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Portfolio Holdings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Portfolio Holdings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Symbol</TableHead>
+              <TableHead>Shares</TableHead>
+              <TableHead>Current Price</TableHead>
+              <TableHead>Market Value</TableHead>
+              <TableHead>Gain/Loss</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {portfolio.map((stock) => {
+              const marketValue = stock.quantity * (stock.current_price || 0);
+              const gainLoss = stock.quantity * ((stock.current_price || 0) - (stock.purchase_price || 0));
+              const gainLossPercent = ((stock.current_price || 0) - (stock.purchase_price || 0)) / (stock.purchase_price || 1) * 100;
+
+              return (
+                <TableRow key={stock.id}>
+                  <TableCell className="font-medium">{stock.stock_symbol}</TableCell>
+                  <TableCell>{stock.quantity}</TableCell>
+                  <TableCell>${(stock.current_price || 0).toFixed(2)}</TableCell>
+                  <TableCell>${marketValue.toFixed(2)}</TableCell>
+                  <TableCell className="flex items-center gap-1">
+                    {gainLoss >= 0 ? (
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className={gainLoss >= 0 ? "text-green-600" : "text-red-600"}>
+                      ${Math.abs(gainLoss).toFixed(2)} ({Math.abs(gainLossPercent).toFixed(2)}%)
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}

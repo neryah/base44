@@ -1,0 +1,199 @@
+import React, { useState } from "react";
+import { Portfolio } from "@/entities/Portfolio";
+import { ExtractDataFromUploadedFile, UploadFile } from "@/integrations/Core";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Upload, AlertCircle, FileSpreadsheet } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export default function PortfolioUpload() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [manualEntry, setManualEntry] = useState({
+    symbol: "",
+    quantity: "",
+    price: ""
+  });
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { file_url } = await UploadFile({ file });
+      
+      const result = await ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: Portfolio.schema()
+      });
+
+      if (result.status === "success" && result.output) {
+        await Portfolio.bulkCreate(result.output);
+        navigate(createPageUrl("Dashboard"));
+      } else {
+        setError("Couldn't extract portfolio data from the file. Please try again or use manual entry.");
+      }
+    } catch (error) {
+      setError("Error processing file. Please try again.");
+    }
+
+    setLoading(false);
+  };
+
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      await Portfolio.create({
+        stock_symbol: manualEntry.symbol.toUpperCase(),
+        quantity: parseFloat(manualEntry.quantity),
+        purchase_price: parseFloat(manualEntry.price),
+        current_price: parseFloat(manualEntry.price),
+        last_updated: new Date().toISOString()
+      });
+
+      navigate(createPageUrl("Dashboard"));
+    } catch (error) {
+      setError("Error adding stock. Please try again.");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Upload Portfolio</h1>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs defaultValue="upload">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="upload">File Upload</TabsTrigger>
+          <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upload">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5" />
+                Upload Portfolio File
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <div className="space-y-4">
+                  <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                  <div>
+                    <Label
+                      htmlFor="file-upload"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 inline-block"
+                    >
+                      Choose File
+                    </Label>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Supported formats: CSV, Excel, PDF
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="manual">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manual Stock Entry</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleManualSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="symbol">Stock Symbol</Label>
+                  <Input
+                    id="symbol"
+                    placeholder="e.g. AAPL"
+                    value={manualEntry.symbol}
+                    onChange={(e) =>
+                      setManualEntry((prev) => ({
+                        ...prev,
+                        symbol: e.target.value
+                      }))
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="quantity">Number of Shares</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="e.g. 100"
+                    value={manualEntry.quantity}
+                    onChange={(e) =>
+                      setManualEntry((prev) => ({
+                        ...prev,
+                        quantity: e.target.value
+                      }))
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="price">Purchase Price per Share</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 150.00"
+                    value={manualEntry.price}
+                    onChange={(e) =>
+                      setManualEntry((prev) => ({
+                        ...prev,
+                        price: e.target.value
+                      }))
+                    }
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={loading}
+                >
+                  Add Stock
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

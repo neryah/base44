@@ -1,0 +1,86 @@
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { User } from "@/entities/User";
+import { AlertCircle, BellRing, Mail, Shield } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+export default function Settings() {
+  const [notifications, setNotifications] = React.useState({
+    email: true,
+    push: false
+  });
+
+  const handleLogout = async () => {
+    await User.logout();
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">Settings</h1>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BellRing className="w-5 h-5" />
+            Notifications
+          </CardTitle>
+          <CardDescription>
+            Configure how you want to receive updates and alerts
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="email-notifications">Email Notifications</Label>
+              <span className="text-sm text-gray-500">
+                Receive portfolio updates via email
+              </span>
+            </div>
+            <Switch
+              id="email-notifications"
+              checked={notifications.email}
+              onCheckedChange={(checked) =>
+                setNotifications((prev) => ({ ...prev, email: checked }))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="push-notifications">Push Notifications</Label>
+              <span className="text-sm text-gray-500">
+                Receive real-time alerts in your browser
+              </span>
+            </div>
+            <Switch
+              id="push-notifications"
+              checked={notifications.push}
+              onCheckedChange={(checked) =>
+                setNotifications((prev) => ({ ...prev, push: checked }))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Security
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleLogout}
+            className="w-full"
+          >
+            Sign Out
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
