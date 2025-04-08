@@ -1,0 +1,41 @@
+{
+  "name": "Stock",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "description": "Stock symbol (e.g. AAPL) | סמל המניה (למשל AAPL)"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Number of shares owned | כמות המניות"
+    },
+    "purchase_price": {
+      "type": "number",
+      "description": "Price per share when purchased | מחיר קנייה למניה"
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of purchase | תאריך קנייה"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes about this position | הערות אופציונליות"
+    },
+    "current_price": {
+      "type": "number",
+      "description": "Custom current price per share (override market data) | מחיר נוכחי מותאם אישית"
+    },
+    "is_bond": {
+      "type": "boolean",
+      "description": "Whether this security is a bond | האם זה אג\"ח"
+    }
+  },
+  "required": [
+    "symbol",
+    "amount",
+    "purchase_price",
+    "purchase_date"
+  ]
+}
